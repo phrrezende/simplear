@@ -1,13 +1,14 @@
 package org.artoolkitx.arx.simplear;
 
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 import android.util.Log;
 
 import org.artoolkitx.arx.arxj.ARController;
 import org.artoolkitx.arx.arxj.Trackable;
 import org.artoolkitx.arx.arxj.rendering.ARRenderer;
+import org.artoolkitx.arx.arxj.rendering.ShaderProgram;
 import org.artoolkitx.arx.arxj.rendering.shader_impl.Cube;
-import org.artoolkitx.arx.arxj.rendering.shader_impl.Line;
 import org.artoolkitx.arx.arxj.rendering.shader_impl.SimpleFragmentShader;
 import org.artoolkitx.arx.arxj.rendering.shader_impl.SimpleShaderProgram;
 import org.artoolkitx.arx.arxj.rendering.shader_impl.SimpleVertexShader;
@@ -26,14 +27,18 @@ public class ARSimpleRenderer extends ARRenderer {
 
     private static final Trackable trackables[] = new Trackable[]{
             new Trackable("hiro", 80.0f),
-            //new Trackable("kanji", 80.0f)
+            new Trackable("kanji", 80.0f)
     };
     private int trackableUIDs[] = new int[trackables.length];
 
     private Cube cube;
-    private Line line;
+//    private Triangulo2 triangulo2;
     private float [] color;
+    private Triangle mTriangle;
 
+   /* private final float[] vPMatrix = new float[16];
+    private final float[] projectionMatrix = new float[16];
+    private final float[] viewMatrix = new float[16];*/
 
     /**
      * Markers can be configured here.
@@ -54,16 +59,27 @@ public class ARSimpleRenderer extends ARRenderer {
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
         this.shaderProgram = new SimpleShaderProgram(new SimpleVertexShader(), new SimpleFragmentShader());
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        //glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
-        cube = new Cube(80.0f, 0.0f, 0.0f, 30.0f);
-        //line = new Line(100f, shaderProgram);
-        //float [] color = { 1.0f, 0.0f, 0.0f, 0.0f};
-        //line.setColor(color);
+        mTriangle = new Triangle();
+//        triangulo2 = new Triangulo2(shaderProgram);
+        cube = new Cube(40.0f, 0.5f, 0.5f, 30.0f);
         cube.setShaderProgram(shaderProgram);
-        //line.setShaderProgram(shaderProgram);
+//        triangulo2.setShaderProgram(shaderProgram);
         super.onSurfaceCreated(unused, config);
     }
+
+
+ /*   public void onSurfaceChanged(GL10 unused, int width, int height){
+        GLES20.glViewport(0, 0, width, height);
+
+        float ratio = (float) width / height;
+
+        // this projection matrix is applied to object coordinates
+        // in the onDrawFrame() method
+        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
+    }*/
+
+
+
 
     /**
      * Override the draw function from ARRenderer.
@@ -76,19 +92,42 @@ public class ARSimpleRenderer extends ARRenderer {
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         GLES20.glFrontFace(GLES20.GL_CCW);
 
+/*        Matrix.setLookAtM(viewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);*/
         // Look for trackables, and draw on each found one.
         for (int trackableUID : trackableUIDs) {
             // If the trackable is visible, apply its transformation, and render a cube
             float[] modelViewMatrix = new float[16];
             //identificar o que é o modelViewMatrix
-            if (ARController.getInstance().queryTrackableVisibilityAndTransformation(trackableUID, modelViewMatrix)) {
+            if ((trackableUID == 0) && (ARController.getInstance().queryTrackableVisibilityAndTransformation(trackableUID, modelViewMatrix))) {
+                float[] projectionMatrix = ARController.getInstance().getProjectionMatrix(10.0f, 10000.0f);
+//                Matrix.setLookAtM(viewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+
+                // Calculate the projection and view transformation
+//                Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
+
+                // Draw shape
+                mTriangle.draw();
+
+            }
+            if ((trackableUID == 1) && (ARController.getInstance().queryTrackableVisibilityAndTransformation(trackableUID, modelViewMatrix))) {
                 float[] projectionMatrix = ARController.getInstance().getProjectionMatrix(10.0f, 10000.0f);
                 cube.draw(projectionMatrix, modelViewMatrix);
-                //line.draw(projectionMatrix, modelViewMatrix);
-
-                //aqui será desenhado o objeto por meio do método onDrawFrame
             }
         }
     }
+
+
+/*    public void onDrawFrame(GL10 unused) {
+        // Set the camera position (View matrix)
+        Matrix.setLookAtM(viewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+
+        // Calculate the projection and view transformation
+        Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
+
+        // Draw shape
+        mTriangle.draw(projectionMatrix,viewMatrix);
+    }*/
+
 
 }
