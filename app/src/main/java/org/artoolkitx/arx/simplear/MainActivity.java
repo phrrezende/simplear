@@ -24,7 +24,7 @@ public class MainActivity extends ARActivity {
     }
 
     protected ARRenderer supplyRenderer() {
-        return new ARSimpleRenderer();
+        return new ARSimpleRenderer(getApplicationContext());
     }
 
     @Override

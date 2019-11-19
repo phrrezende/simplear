@@ -1,5 +1,6 @@
 package org.artoolkitx.arx.simplear;
 
+import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.util.Log;
@@ -13,6 +14,8 @@ import org.artoolkitx.arx.arxj.rendering.shader_impl.SimpleFragmentShader;
 import org.artoolkitx.arx.arxj.rendering.shader_impl.SimpleShaderProgram;
 import org.artoolkitx.arx.arxj.rendering.shader_impl.SimpleVertexShader;
 
+import java.io.IOException;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
@@ -22,8 +25,14 @@ import static android.opengl.GLES20.glUniform4f;
 public class ARSimpleRenderer extends ARRenderer {
 
     private SimpleShaderProgram shaderProgram;
+    private Context context;
 
     //TODO: I think we should add the trackable class to the library (arxj)
+
+
+    public ARSimpleRenderer(Context context){
+        this.context = context;
+    }
 
     private static final Trackable trackables[] = new Trackable[]{
             new Trackable("hiro", 80.0f),
@@ -35,6 +44,8 @@ public class ARSimpleRenderer extends ARRenderer {
 //    private Triangulo2 triangulo2;
     private float [] color;
     private Triangle mTriangle;
+    private Torus mTorus;
+    private Teste mTeste;
 
    /* private final float[] vPMatrix = new float[16];
     private final float[] projectionMatrix = new float[16];
@@ -60,6 +71,16 @@ public class ARSimpleRenderer extends ARRenderer {
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
         this.shaderProgram = new SimpleShaderProgram(new SimpleVertexShader(), new SimpleFragmentShader());
         mTriangle = new Triangle();
+        try {
+            mTorus = new Torus(this.context);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            mTeste = new Teste(this.context);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 //        triangulo2 = new Triangulo2(shaderProgram);
         cube = new Cube(40.0f, 0.5f, 0.5f, 30.0f);
         cube.setShaderProgram(shaderProgram);
@@ -107,8 +128,8 @@ public class ARSimpleRenderer extends ARRenderer {
 //                Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
 
                 // Draw shape
-                mTriangle.draw();
-
+//                mTriangle.draw();
+                mTorus.draw(projectionMatrix,modelViewMatrix);
             }
             if ((trackableUID == 1) && (ARController.getInstance().queryTrackableVisibilityAndTransformation(trackableUID, modelViewMatrix))) {
                 float[] projectionMatrix = ARController.getInstance().getProjectionMatrix(10.0f, 10000.0f);
