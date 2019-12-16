@@ -41,15 +41,9 @@ public class ARSimpleRenderer extends ARRenderer {
     private int trackableUIDs[] = new int[trackables.length];
 
     private Cube cube;
-//    private Triangulo2 triangulo2;
     private float [] color;
-    private Triangle mTriangle;
     private Torus mTorus;
-    private Teste mTeste;
-
-   /* private final float[] vPMatrix = new float[16];
-    private final float[] projectionMatrix = new float[16];
-    private final float[] viewMatrix = new float[16];*/
+    private MagneticField mMagneticField;
 
     /**
      * Markers can be configured here.
@@ -70,36 +64,22 @@ public class ARSimpleRenderer extends ARRenderer {
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
         this.shaderProgram = new SimpleShaderProgram(new SimpleVertexShader(), new SimpleFragmentShader());
-        mTriangle = new Triangle();
-        try {
-            mTorus = new Torus(this.context);
-        } catch (IOException e) {
+//        try {
+//            mTorus = new Torus(this.context);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+        try{
+            mMagneticField = new MagneticField(this.context);
+        }catch (IOException e){
             e.printStackTrace();
         }
-        try {
-            mTeste = new Teste(this.context);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-//        triangulo2 = new Triangulo2(shaderProgram);
+
         cube = new Cube(40.0f, 0.5f, 0.5f, 30.0f);
         cube.setShaderProgram(shaderProgram);
-//        triangulo2.setShaderProgram(shaderProgram);
         super.onSurfaceCreated(unused, config);
     }
-
-
- /*   public void onSurfaceChanged(GL10 unused, int width, int height){
-        GLES20.glViewport(0, 0, width, height);
-
-        float ratio = (float) width / height;
-
-        // this projection matrix is applied to object coordinates
-        // in the onDrawFrame() method
-        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
-    }*/
-
-
 
 
     /**
@@ -113,8 +93,6 @@ public class ARSimpleRenderer extends ARRenderer {
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         GLES20.glFrontFace(GLES20.GL_CCW);
 
-/*        Matrix.setLookAtM(viewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
-        Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);*/
         // Look for trackables, and draw on each found one.
         for (int trackableUID : trackableUIDs) {
             // If the trackable is visible, apply its transformation, and render a cube
@@ -122,14 +100,8 @@ public class ARSimpleRenderer extends ARRenderer {
             //identificar o que é o modelViewMatrix
             if ((trackableUID == 0) && (ARController.getInstance().queryTrackableVisibilityAndTransformation(trackableUID, modelViewMatrix))) {
                 float[] projectionMatrix = ARController.getInstance().getProjectionMatrix(10.0f, 10000.0f);
-//                Matrix.setLookAtM(viewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
-                // Calculate the projection and view transformation
-//                Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
-
-                // Draw shape
-//                mTriangle.draw();
-                mTorus.draw(projectionMatrix,modelViewMatrix);
+                mMagneticField.draw(projectionMatrix,modelViewMatrix);
             }
             if ((trackableUID == 1) && (ARController.getInstance().queryTrackableVisibilityAndTransformation(trackableUID, modelViewMatrix))) {
                 float[] projectionMatrix = ARController.getInstance().getProjectionMatrix(10.0f, 10000.0f);
@@ -137,18 +109,6 @@ public class ARSimpleRenderer extends ARRenderer {
             }
         }
     }
-
-
-/*    public void onDrawFrame(GL10 unused) {
-        // Set the camera position (View matrix)
-        Matrix.setLookAtM(viewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
-
-        // Calculate the projection and view transformation
-        Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
-
-        // Draw shape
-        mTriangle.draw(projectionMatrix,viewMatrix);
-    }*/
 
 
 }

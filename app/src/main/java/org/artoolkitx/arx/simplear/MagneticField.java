@@ -1,10 +1,11 @@
 package org.artoolkitx.arx.simplear;
 
 import android.content.Context;
+import android.opengl.GLES20;
+import android.opengl.Matrix;
 
 import org.apache.commons.io.IOUtils;
-import org.artoolkitx.arx.arxj.rendering.ARDrawable;
-import org.artoolkitx.arx.arxj.rendering.ShaderProgram;
+import org.artoolkitx.arx.arxj.rendering.OpenGLShader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,21 +18,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public final class Teste implements ARDrawable {
+public class MagneticField {
 
-    private ShaderProgram shaderProgram;
     private List<String> verticesList;
     private List<String> facesList;
     private FloatBuffer verticesBuffer;
     private ShortBuffer facesBuffer;
+    private int program;
     private Context context;
 
-    public Teste(Context context) throws IOException {
+
+
+
+    public MagneticField(Context context) throws IOException {
         verticesList = new ArrayList<>();
         facesList = new ArrayList<>();
         this.context = context;
 
-        Scanner scanner = new Scanner(context.getAssets().open("torus.obj"));
+        Scanner scanner = new Scanner(context.getAssets().open("campo_magnetico_2.obj"));
 
         while (scanner.hasNextLine()){
             String line = scanner.nextLine();
@@ -81,20 +85,51 @@ public final class Teste implements ARDrawable {
         InputStream fragmentShaderStream = context.getResources().openRawResource(R.raw.fragment_shader);
         String fragmentShaderCode = IOUtils.toString(fragmentShaderStream, Charset.defaultCharset());
         fragmentShaderStream.close();
+
+        int vertexShader = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER);
+        GLES20.glShaderSource(vertexShader, vertexShaderCode);
+
+        int fragmentShader = GLES20.glCreateShader(GLES20.GL_FRAGMENT_SHADER);
+        GLES20.glShaderSource(fragmentShader, fragmentShaderCode);
+
+        GLES20.glCompileShader(vertexShader);
+        GLES20.glCompileShader(fragmentShader);
+
+        program = GLES20.glCreateProgram();
+        GLES20.glAttachShader(program, vertexShader);
+        GLES20.glAttachShader(program, fragmentShader);
+
+        GLES20.glLinkProgram(program);
+        //
+
     }
 
-    @Override
-    public void draw(float[] projectionMatrix, float[] modelViewMatrix) {
-        shaderProgram.setProjectionMatrix(projectionMatrix);
-        shaderProgram.setModelViewMatrix(modelViewMatrix);
-
-        //shaderProgram.render(this.getmVertexBuffer(), this.getmColorBuffer(), this.getmIndexBuffer());
-        shaderProgram.render(this.verticesBuffer, null, null);
+    public int getProjectionMatrixHandle() {
+        return GLES20.glGetUniformLocation(program, OpenGLShader.projectionMatrixString);
     }
 
-    @Override
-    public void setShaderProgram(ShaderProgram program) {
-        this.shaderProgram = program;
+    public int getModelViewMatrixHandle() {
+        return GLES20.glGetUniformLocation(program, OpenGLShader.modelViewMatrixString);
+    }
+    public void draw(float[] projectionMatrix, float[] viewMatrix){
+        GLES20.glUseProgram(program);
+        int position = GLES20.glGetAttribLocation(program, "position");
+        GLES20.glEnableVertexAttribArray(position);
 
+        GLES20.glVertexAttribPointer(position,
+                3, GLES20.GL_FLOAT, false, 3 * 4, verticesBuffer);
+        
+
+        float[] productMatrix = new float[16];
+        Matrix.multiplyMM(productMatrix, 0,
+                projectionMatrix, 0,
+                viewMatrix, 0);
+        int matrix = GLES20.glGetUniformLocation(program, "matrix");
+        GLES20.glUniformMatrix4fv(matrix, 1, false, productMatrix, 0);
+        GLES20.glUniformMatrix4fv(getProjectionMatrixHandle(), 1, false, projectionMatrix, 0);
+        GLES20.glUniformMatrix4fv(getModelViewMatrixHandle(), 1, false, viewMatrix, 0);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES,
+                facesList.size() * 3, GLES20.GL_UNSIGNED_SHORT, facesBuffer);
+        GLES20.glDisableVertexAttribArray(position);
     }
 }

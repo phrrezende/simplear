@@ -5,6 +5,7 @@ import android.opengl.GLES20;
 import android.opengl.Matrix;
 
 import org.apache.commons.io.IOUtils;
+import org.artoolkitx.arx.arxj.rendering.OpenGLShader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,12 +29,13 @@ public class Torus {
 
 
 
+
     public Torus(Context context) throws IOException {
         verticesList = new ArrayList<>();
         facesList = new ArrayList<>();
         this.context = context;
 
-        Scanner scanner = new Scanner(context.getAssets().open("torus.obj"));
+        Scanner scanner = new Scanner(context.getAssets().open("torus3.obj"));
 
         while (scanner.hasNextLine()){
             String line = scanner.nextLine();
@@ -102,6 +104,13 @@ public class Torus {
 
     }
 
+    public int getProjectionMatrixHandle() {
+        return GLES20.glGetUniformLocation(program, OpenGLShader.projectionMatrixString);
+    }
+
+    public int getModelViewMatrixHandle() {
+        return GLES20.glGetUniformLocation(program, OpenGLShader.modelViewMatrixString);
+    }
     public void draw(float[] projectionMatrix, float[] viewMatrix){
         GLES20.glUseProgram(program);
         int position = GLES20.glGetAttribLocation(program, "position");
@@ -114,7 +123,7 @@ public class Torus {
         //float[] viewMatrix = new float[16];
 
         float[] productMatrix = new float[16];
-
+        /*
         Matrix.frustumM(projectionMatrix, 0,
                 -1, 1,
                 -1, 1,
@@ -122,12 +131,14 @@ public class Torus {
         Matrix.setLookAtM(viewMatrix, 0,
                 0, 3, -4,
                 0, 0, 0,
-                0, 1, 0);
+                0, 1, 0);*/
         Matrix.multiplyMM(productMatrix, 0,
                 projectionMatrix, 0,
                 viewMatrix, 0);
         int matrix = GLES20.glGetUniformLocation(program, "matrix");
         GLES20.glUniformMatrix4fv(matrix, 1, false, productMatrix, 0);
+        GLES20.glUniformMatrix4fv(getProjectionMatrixHandle(), 1, false, projectionMatrix, 0);
+        GLES20.glUniformMatrix4fv(getModelViewMatrixHandle(), 1, false, viewMatrix, 0);
         GLES20.glDrawElements(GLES20.GL_TRIANGLES,
                 facesList.size() * 3, GLES20.GL_UNSIGNED_SHORT, facesBuffer);
         GLES20.glDisableVertexAttribArray(position);
